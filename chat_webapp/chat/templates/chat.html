@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Проект чат на Django</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="row justify-content-center"> 
+        <div class="col-md-8">
+            
+            {% if messages %}
+                <div class="mt-2 mb-3">
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'success' %}success{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <h2 class="text-center mt-3">Welcome, {{ user.username }}</h2>
+            
+            <form method="get" class="row g-2 mb-4 mt-3 align-items-center bg-light p-2 rounded border">
+                <div class="col-auto">
+                    <label class="col-form-label">Фильтр по дате:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="date" name="date" class="form-control" value="{{ request.GET.date }}">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary btn-sm">Применить</button>
+                </div>
+                {% if request.GET.date %}
+                <div class="col-auto">
+                    <a href="{% url 'chat' %}" class="btn btn-secondary btn-sm">Сбросить</a>
+                </div>
+                {% endif %}
+            </form>
+
+            <div class="chat-box mt-4">
+                <ul class="list-group">
+                    {% for message in messages %}
+                        <li class="list-group-item">
+                            <strong>{{ message.user.username }}</strong>: {{ message.text }}
+                            <span class="float-end text-muted" style="font-size: 0.85rem;">{{ message.timestamp|date:"H:i:s" }}</span>
+                            
+                            {% if message.user == user %}
+                                <div class="mt-2">
+                                    <form method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="delete_message_id" value="{{ message.id }}">
+                                        <button type="submit" class="btn btn-sm btn-danger py-0 px-1">Delete</button>
+                                    </form>
+
+                                    <button type="button" class="btn btn-sm btn-warning py-0 px-1" data-bs-toggle="modal" data-bs-target="#editMessageModal{{ message.id }}">
+                                        Edit
+                                    </button>
+                                </div>
+
+                                <div class="modal fade" id="editMessageModal{{ message.id }}" tabindex="-1" aria-labelledby="editMessageModalLabel{{ message.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editMessageModalLabel{{ message.id }}">Редактировать сообщение</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <textarea name="text" class="form-control" rows="3">{{ message.text }}</textarea>
+                                                    <input type="hidden" name="edit_message_id" value="{{ message.id }}">
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                                                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-center text-muted">Сообщений пока нет.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="card mt-4 p-3 shadow-sm">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Текст сообщения:</label>
+                        {{ form.text }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Send</button>
+                </form>
+            </div>
+
+            {% if archived_messages %}
+                <div class="mt-5 pt-3 border-top">
+                    <h4 class="text-muted">Ваш архив (удаленные сообщения)</h4>
+                    <ul class="list-group opacity-75">
+                        {% for msg in archived_messages %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                                <div>
+                                    <span class="text-decoration-line-through text-muted">{{ msg.text }}</span>
+                                    <small class="text-muted ms-2">({{ msg.timestamp|date:"H:i:s" }})</small>
+                                </div>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="restore_message_id" value="{{ msg.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success py-1">Восстановить</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

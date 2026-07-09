@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>{{ article.title }}</title></head>
+<body>
+    <a href="{% url 'article_list' %}"> Назад к списку</a>
+    <h1>{{ article.title }}</h1>
+    <p><i>Автор: {{ article.author.username }} | {{ article.created_at }}</i></p>
+    <hr>
+    <p>{{ article.text|linebreaks }}</p>
+    
+    {% if user.is_authenticated and article.author == user %}
+        <hr>
+        <a href="{% url 'article_edit' article.pk %}">Редактировать</a> | 
+        <a href="{% url 'article_delete' article.pk %}">Удалить</a>
+    {% endif %}
+</body>
+</html> 

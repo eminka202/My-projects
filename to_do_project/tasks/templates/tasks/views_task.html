@@ -1,0 +1,5 @@
+<h1>{{ task.title }}</h1>
+<p>{{ task.description }}</p>
+{% if task.completed %}<p>Статус: Выполнено</p>{% endif %}
+<a href="{% url 'edit_task' task.id %}">Редактировать</a>
+<a href="{% url 'index' %}">Назад</a> 
